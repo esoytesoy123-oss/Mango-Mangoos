@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Mango Finance" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>Mango Finance</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d14;
+      --surface: #16162a;
+      --surface2: #1e1e38;
+      --border: #2a2a4a;
+      --accent: #f5c518;
+      --accent2: #ff6b35;
+      --green: #00d97e;
+      --red: #ff4757;
+      --text: #e8e8f0;
+      --muted: #7070a0;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    .app-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,13,20,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .app-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; }
+    .app-logo span { color: var(--accent); }
+    .period-badge {
+      font-family: 'DM Mono', monospace; font-size: 0.7rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 4px 10px; border-radius: 20px; color: var(--muted);
+      cursor: pointer;
+    }
+
+    /* TABS */
+    .tab-bar {
+      display: flex; gap: 2px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab {
+      flex: 1; min-width: 80px;
+      padding: 12px 8px; text-align: center;
+      font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.05em;
+      color: var(--muted); cursor: pointer; border: none; background: none;
+      transition: all 0.2s; text-transform: uppercase; white-space: nowrap;
+    }
+    .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+    /* MAIN */
+    .main { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
+
+    /* CARDS */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+    }
+    .card-title {
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .card-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+    /* SETUP GRID */
+    .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-group label {
+      font-family: 'DM Mono', monospace; font-size: 0.65rem;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .input-group input, .input-group textarea, .input-group select {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px;
+      color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.85rem;
+      outline: none; transition: border-color 0.2s; width: 100%;
+    }
+    .input-group input:focus, .input-group textarea:focus {
+      border-color: var(--accent);
+    }
+    .input-full { grid-column: 1 / -1; }
+
+    /* STAT PILLS */
+    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .stat-pill {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px; text-align: center;
+    }
+    .stat-pill .val {
+      font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 500;
+      color: var(--accent);
+    }
+    .stat-pill .lbl {
+      font-size: 0.65rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .stat-pill.green .val { color: var(--green); }
+    .stat-pill.red .val { color: var(--red); }
+
+    /* LINE ITEMS */
+    .line-items { display: flex; flex-direction: column; gap: 8px; }
+    .line-item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px;
+    }
+    .line-item .li-label { flex: 1; font-size: 0.85rem; color: var(--text); }
+    .line-item .li-amount {
+      font-family: 'DM Mono', monospace; font-size: 0.85rem; color: var(--accent);
+      min-width: 90px; text-align: right;
+    }
+    .line-item .li-amount.negative { color: var(--red); }
+    .btn-remove {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 1.1rem; padding: 2px 4px;
+      transition: color 0.2s;
+    }
+    .btn-remove:hover { color: var(--red); }
+
+    /* ADD ROW */
+    .add-row {
+      display: flex; gap: 8px; margin-top: 10px;
+    }
+    .add-row input {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 8px 12px;
+      color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.8rem;
+      outline: none; flex: 1;
+    }
+    .add-row input:focus { border-color: var(--accent); }
+    .btn-add {
+      background: var(--accent); color: #000; border: none;
+      border-radius: 10px; padding: 8px 14px; font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 0.8rem; cursor: pointer; white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    .btn-add:hover { opacity: 0.85; }
+
+    /* DIVIDER */
+    .divider {
+      border: none; border-top: 1px solid var(--border); margin: 14px 0;
+    }
+
+    /* TOTALS */
+    .total-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 0;
+    }
+    .total-row .t-label {
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem;
+    }
+    .total-row .t-val {
+      font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: 500; color: var(--accent);
+    }
+    .total-row .t-val.green { color: var(--green); }
+    .total-row .t-val.red { color: var(--red); }
+
+    /* BALANCE SHEET */
+    .bs-grid { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 0; }
+    .bs-col { padding: 10px; }
+    .bs-divider { background: var(--border); }
+    .bs-title {
+      font-family: 'DM Mono', monospace; font-size: 0.65rem;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .bs-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; }
+    .bs-item .bs-key { color: var(--muted); }
+    .bs-item .bs-val { font-family: 'DM Mono', monospace; }
+    .bs-total {
+      border-top: 1px solid var(--border); margin-top: 10px; padding-top: 10px;
+      display: flex; justify-content: space-between;
+      font-family: 'DM Mono', monospace; font-size: 0.9rem; font-weight: 500;
+    }
+
+    /* PERIOD MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 200; display: flex; align-items: flex-end;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px 20px 0 0; padding: 24px 20px 40px;
+      width: 100%; transform: translateY(100%); transition: transform 0.3s ease;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 16px; }
+    .btn-save {
+      width: 100%; background: var(--accent); color: #000; border: none;
+      border-radius: 12px; padding: 14px; font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 16px;
+    }
+    .btn-close {
+      position: absolute; top: 16px; right: 20px;
+      background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer;
+    }
+
+    /* FAB */
+    .fab-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(13,13,20,0.95); backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: center; gap: 12px; padding: 12px 20px 24px;
+    }
+    .btn-fab {
+      flex: 1; max-width: 180px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px; font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 0.8rem; color: var(--text); cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-fab.primary { background: var(--accent); color: #000; border-color: var(--accent); }
+    .btn-fab:hover { opacity: 0.85; }
+
+    /* PERIOD SELECTOR PERIODS LIST */
+    .periods-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .period-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .period-item.active { border-color: var(--accent); }
+    .period-item .pi-name { font-family: 'DM Mono', monospace; font-size: 0.8rem; }
+    .period-item .pi-date { font-size: 0.7rem; color: var(--muted); }
+    .period-item .pi-actions { display: flex; gap: 8px; }
+    .btn-sm {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      padding: 3px 8px; font-size: 0.65rem; color: var(--muted); cursor: pointer;
+    }
+    .btn-sm.danger:hover { border-color: var(--red); color: var(--red); }
+    .btn-sm.success { border-color: var(--accent); color: var(--accent); }
+
+    /* Sections hidden */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* Section header info */
+    .section-hint {
+      font-size: 0.72rem; color: var(--muted); margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* Scrollable area */
+    .scroll-list { max-height: 220px; overflow-y: auto; }
+
+    /* Category sub-label */
+    .sub-label {
+      font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      margin: 14px 0 6px;
+    }
+
+    .badge {
+      display: inline-block; font-size: 0.6rem; font-family: 'DM Mono', monospace;
+      padding: 2px 8px; border-radius: 20px; margin-left: 8px;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-logo">🥭 <span>Mango</span> Finance</div>
+  <button class="period-badge" onclick="openModal('periodModal')" id="periodBadge">Loading...</button>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('income')">Income Stmt</button>
+  <button class="tab" onclick="switchTab('cashflow')">Cash Flow</button>
+  <button class="tab" onclick="switchTab('balance')">Balance Sheet</button>
+  <button class="tab" onclick="switchTab('setup')">Setup</button>
+</div>
+
+<div class="main">
+
+  <!-- INCOME STATEMENT -->
+  <div class="section active" id="tab-income">
+    <p class="section-hint">Profit = Revenue − Expenses</p>
+
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Revenue</div>
+      <div class="stat-row">
+        <div class="stat-pill">
+          <div class="val" id="is-revenue">₱0</div>
+          <div class="lbl">Total Revenue</div>
+        </div>
+        <div class="stat-pill green">
+          <div class="val" id="is-net">₱0</div>
+          <div class="lbl">Net Profit</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--red)"></span> Ingredients <span class="badge" id="badge-ingredients">0</span></div>
+      <div class="line-items scroll-list" id="list-ingredients"></div>
+      <div class="add-row">
+        <input type="text" id="add-ing-name" placeholder="e.g. Raw Mango" />
+        <input type="number" id="add-ing-amt" placeholder="₱" style="max-width:100px" />
+        <button class="btn-add" onclick="addLineItem('ingredients')">+ Add</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span> Operations <span class="badge" id="badge-operations">0</span></div>
+      <div class="line-items scroll-list" id="list-operations"></div>
+      <div class="add-row">
+        <input type="text" id="add-ops-name" placeholder="e.g. Transportation" />
+        <input type="number" id="add-ops-amt" placeholder="₱" style="max-width:100px" />
+        <button class="btn-add" onclick="addLineItem('operations')">+ Add</button>
+      </div>
+      <hr class="divider">
+      <div class="total-row">
+        <div class="t-label">Total Expenses</div>
+        <div class="t-val red" id="is-total-expense">₱0</div>
+      </div>
+      <div class="total-row" style="border-top:1px solid var(--border); padding-top:14px;">
+        <div class="t-label" style="color:var(--accent); font-size:1rem;">Net Profit</div>
+        <div class="t-val green" id="is-net2">₱0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CASH FLOW -->
+  <div class="section" id="tab-cashflow">
+    <p class="section-hint">Tracks actual money movement in and out of the business.</p>
+
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Cash from Operations</div>
+      <div class="total-row">
+        <div class="t-label">Cash from Customers</div>
+        <div class="t-val" id="cf-customers">₱0</div>
+      </div>
+      <div class="total-row">
+        <div class="t-label">Expenses Paid</div>
+        <div class="t-val red" id="cf-expenses">₱0</div>
+      </div>
+      <hr class="divider">
+      <div class="total-row">
+        <div class="t-label">Net Cash from Ops</div>
+        <div class="t-val green" id="cf-net-ops">₱0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span> Investing & Financing</div>
+      <div class="total-row">
+        <div class="t-label">Cash from Investments</div>
+        <div class="t-val" id="cf-investments">₱0</div>
+      </div>
+      <div class="total-row">
+        <div class="t-label">Owner's Capital (Financing)</div>
+        <div class="t-val" id="cf-financing">₱0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--green)"></span> Cash Position</div>
+      <div class="total-row">
+        <div class="t-label">Starting Cash</div>
+        <div class="t-val" id="cf-start">₱0</div>
+      </div>
+      <hr class="divider">
+      <div class="total-row">
+        <div class="t-label" style="color:var(--green); font-size:1rem;">Ending Cash</div>
+        <div class="t-val green" id="cf-end">₱0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BALANCE SHEET -->
+  <div class="section" id="tab-balance">
+    <p class="section-hint">Assets = Liabilities + Owner's Equity. Must always balance.</p>
+
+    <div class="card">
+      <div class="bs-grid">
+        <div class="bs-col">
+          <div class="bs-title">Assets</div>
+          <div class="bs-item">
+            <span class="bs-key">Cash on Hand</span>
+            <span class="bs-val" id="bs-cash">₱0</span>
+          </div>
+          <div class="bs-item">
+            <span class="bs-key">Inventory</span>
+            <span class="bs-val" id="bs-inventory">₱0</span>
+          </div>
+          <div class="bs-total">
+            <span>Total Assets</span>
+            <span id="bs-total-assets">₱0</span>
+          </div>
+        </div>
+        <div class="bs-divider"></div>
+        <div class="bs-col">
+          <div class="bs-title">Liabilities + OE</div>
+          <div class="bs-item">
+            <span class="bs-key">Net Profit</span>
+            <span class="bs-val" id="bs-profit">₱0</span>
+          </div>
+          <div class="bs-item">
+            <span class="bs-key">Owner's Capital</span>
+            <span class="bs-val" id="bs-capital">₱0</span>
+          </div>
+          <div class="bs-total">
+            <span>Total L + OE</span>
+            <span id="bs-total-loe">₱0</span>
+          </div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div style="text-align:center; font-family:'DM Mono',monospace; font-size:0.8rem; color:var(--muted);">
+        Balance Check: <span id="bs-check" style="color:var(--green);">✓ Balanced</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <div class="section" id="tab-setup">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Business Setup</div>
+      <div class="setup-grid">
+        <div class="input-group input-full">
+          <label>Company Name</label>
+          <input type="text" id="setup-company" placeholder="e.g. Mango Salvania" />
+        </div>
+        <div class="input-group input-full">
+          <label>Report Period</label>
+          <input type="text" id="setup-period" placeholder="e.g. 2nd Week of January" />
+        </div>
+        <div class="input-group input-full">
+          <label>Report Date</label>
+          <input type="date" id="setup-date" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span> Initial Figures</div>
+      <div class="setup-grid">
+        <div class="input-group">
+          <label>Starting Money</label>
+          <input type="number" id="setup-starting-money" placeholder="5700" />
+        </div>
+        <div class="input-group">
+          <label>Inventory Purchased</label>
+          <input type="number" id="setup-inventory" placeholder="4644" />
+        </div>
+        <div class="input-group">
+          <label>Operational Expense</label>
+          <input type="number" id="setup-opex" placeholder="185" />
+        </div>
+        <div class="input-group">
+          <label>Starting Cash</label>
+          <input type="number" id="setup-starting-cash" placeholder="871" />
+        </div>
+        <div class="input-group">
+          <label>Total Revenue</label>
+          <input type="number" id="setup-revenue" placeholder="10740" />
+        </div>
+        <div class="input-group">
+          <label>Owner's Capital</label>
+          <input type="number" id="setup-owners-capital" placeholder="5700" />
+        </div>
+        <div class="input-group">
+          <label>Cash from Investments</label>
+          <input type="number" id="setup-investments" placeholder="0" />
+        </div>
+      </div>
+      <button class="btn-save" onclick="saveSetup()">💾 Save Setup</button>
+    </div>
+
+    <!-- Periods Manager -->
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--green)"></span> Saved Periods</div>
+      <div class="periods-list" id="periods-list"></div>
+      <button class="btn-save" style="background:var(--surface2); color:var(--text); border:1px solid var(--border); margin-top:10px;" onclick="newPeriod()">＋ New Period</button>
+    </div>
+  </div>
+</div>
+
+<!-- Period Modal -->
+<div class="modal-overlay" id="periodModal">
+  <div class="modal" style="position:relative;">
+    <button class="btn-close" onclick="closeModal('periodModal')">×</button>
+    <div class="modal-title">Switch Period</div>
+    <div class="periods-list" id="modal-periods-list"></div>
+    <button class="btn-save" onclick="newPeriod(); closeModal('periodModal')">＋ New Period</button>
+  </div>
+</div>
+
+<div class="fab-bar">
+  <button class="btn-fab" onclick="newPeriod()">＋ New Period</button>
+  <button class="btn-fab primary" onclick="saveSetup()">Save</button>
+</div>
+
+<script>
+// ===== STATE =====
+let state = {
+  periods: [],
+  activePeriodId: null,
+};
+
+function defaultPeriod(id) {
+  return {
+    id: id || Date.now().toString(),
+    company: 'Mango Salvania',
+    period: '2nd Week of January',
+    date: new Date().toISOString().split('T')[0],
+    startingMoney: 5700,
+    inventory: 4644,
+    opex: 185,
+    startingCash: 871,
+    revenue: 10740,
+    ownersCapital: 5700,
+    investments: 0,
+    ingredients: [
+      { id: '1', name: 'Raw Mango', amount: 1200 },
+      { id: '2', name: 'Sugar', amount: 300 },
+    ],
+    operations: [
+      { id: '1', name: 'Transportation', amount: 185 },
+      { id: '2', name: 'Packaging', amount: 324 },
+    ],
+  };
+}
+
+function getActivePeriod() {
+  return state.periods.find(p => p.id === state.activePeriodId) || state.periods[0];
+}
+
+// ===== STORAGE =====
+function saveState() {
+  localStorage.setItem('mango_finance_v2', JSON.stringify(state));
+}
+
+function loadState() {
+  const raw = localStorage.getItem('mango_finance_v2');
+  if (raw) {
+    try { state = JSON.parse(raw); } catch(e) {}
+  }
+  if (!state.periods || state.periods.length === 0) {
+    const p = defaultPeriod();
+    state.periods = [p];
+    state.activePeriodId = p.id;
+    saveState();
+  }
+  if (!state.activePeriodId) {
+    state.activePeriodId = state.periods[0].id;
+  }
+}
+
+// ===== COMPUTED =====
+function compute(p) {
+  const ingTotal = p.ingredients.reduce((s, i) => s + Number(i.amount || 0), 0);
+  const opsTotal = p.operations.reduce((s, i) => s + Number(i.amount || 0), 0);
+  const totalExpenses = ingTotal + opsTotal;
+  const netProfit = Number(p.revenue) - totalExpenses;
+  const netCashOps = Number(p.revenue) - totalExpenses;
+  const endCash = Number(p.startingCash) + netCashOps + Number(p.investments) + Number(p.ownersCapital);
+  const totalAssets = endCash + Number(p.inventory);
+  const totalLOE = netProfit + Number(p.ownersCapital);
+  return { ingTotal, opsTotal, totalExpenses, netProfit, netCashOps, endCash, totalAssets, totalLOE };
+}
+
+// ===== FORMAT =====
+function fmt(n) {
+  const v = Number(n) || 0;
+  return (v < 0 ? '-₱' : '₱') + Math.abs(v).toLocaleString('en-PH', { minimumFractionDigits: 0 });
+}
+
+// ===== RENDER =====
+function render() {
+  const p = getActivePeriod();
+  if (!p) return;
+  const c = compute(p);
+
+  // Header badge
+  document.getElementById('periodBadge').textContent = p.period || 'Set Period';
+
+  // Income Statement
+  document.getElementById('is-revenue').textContent = fmt(p.revenue);
+  document.getElementById('is-net').textContent = fmt(c.netProfit);
+  document.getElementById('is-net').parentElement.className = 'stat-pill ' + (c.netProfit >= 0 ? 'green' : 'red');
+  document.getElementById('is-total-expense').textContent = fmt(c.totalExpenses);
+  document.getElementById('is-net2').textContent = fmt(c.netProfit);
+  document.getElementById('is-net2').className = 't-val ' + (c.netProfit >= 0 ? 'green' : 'red');
+
+  // Line items
+  renderLineItems('ingredients', p.ingredients);
+  renderLineItems('operations', p.operations);
+  document.getElementById('badge-ingredients').textContent = p.ingredients.length;
+  document.getElementById('badge-operations').textContent = p.operations.length;
+
+  // Cash Flow
+  document.getElementById('cf-customers').textContent = fmt(p.revenue);
+  document.getElementById('cf-expenses').textContent = fmt(c.totalExpenses);
+  document.getElementById('cf-net-ops').textContent = fmt(c.netCashOps);
+  document.getElementById('cf-investments').textContent = fmt(p.investments);
+  document.getElementById('cf-financing').textContent = fmt(p.ownersCapital);
+  document.getElementById('cf-start').textContent = fmt(p.startingCash);
+  document.getElementById('cf-end').textContent = fmt(c.endCash);
+
+  // Balance Sheet
+  document.getElementById('bs-cash').textContent = fmt(c.endCash);
+  document.getElementById('bs-inventory').textContent = fmt(p.inventory);
+  document.getElementById('bs-total-assets').textContent = fmt(c.totalAssets);
+  document.getElementById('bs-profit').textContent = fmt(c.netProfit);
+  document.getElementById('bs-capital').textContent = fmt(p.ownersCapital);
+  document.getElementById('bs-total-loe').textContent = fmt(c.totalLOE);
+  const balanced = Math.abs(c.totalAssets - c.totalLOE) < 1;
+  document.getElementById('bs-check').textContent = balanced ? '✓ Balanced' : `⚠ Off by ${fmt(Math.abs(c.totalAssets - c.totalLOE))}`;
+  document.getElementById('bs-check').style.color = balanced ? 'var(--green)' : 'var(--red)';
+
+  // Setup fields
+  document.getElementById('setup-company').value = p.company || '';
+  document.getElementById('setup-period').value = p.period || '';
+  document.getElementById('setup-date').value = p.date || '';
+  document.getElementById('setup-starting-money').value = p.startingMoney || '';
+  document.getElementById('setup-inventory').value = p.inventory || '';
+  document.getElementById('setup-opex').value = p.opex || '';
+  document.getElementById('setup-starting-cash').value = p.startingCash || '';
+  document.getElementById('setup-revenue').value = p.revenue || '';
+  document.getElementById('setup-owners-capital').value = p.ownersCapital || '';
+  document.getElementById('setup-investments').value = p.investments || '';
+
+  // Periods list
+  renderPeriodsList();
+}
+
+function renderLineItems(type, items) {
+  const container = document.getElementById('list-' + type);
+  container.innerHTML = '';
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'line-item';
+    div.innerHTML = `
+      <span class="li-label" contenteditable="true" onblur="updateItemName('${type}', '${item.id}', this.textContent)">${item.name}</span>
+      <span class="li-amount negative">
+        <input type="number" value="${item.amount}" 
+          style="background:none;border:none;color:var(--red);font-family:'DM Mono',monospace;font-size:0.85rem;text-align:right;width:90px;outline:none;"
+          onchange="updateItemAmount('${type}', '${item.id}', this.value)"
+          oninput="updateItemAmount('${type}', '${item.id}', this.value)"
+        />
+      </span>
+      <button class="btn-remove" onclick="removeLineItem('${type}', '${item.id}')">✕</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function renderPeriodsList() {
+  const list = document.getElementById('periods-list');
+  const mList = document.getElementById('modal-periods-list');
+  const html = state.periods.map(p => `
+    <div class="period-item ${p.id === state.activePeriodId ? 'active' : ''}" onclick="switchPeriod('${p.id}')">
+      <div>
+        <div class="pi-name">${p.period || 'Unnamed Period'}</div>
+        <div class="pi-date">${p.company || ''} · ${p.date || ''}</div>
+      </div>
+      <div class="pi-actions" onclick="event.stopPropagation()">
+        <button class="btn-sm success" onclick="switchPeriod('${p.id}')">Load</button>
+        <button class="btn-sm danger" onclick="deletePeriod('${p.id}')">Del</button>
+      </div>
+    </div>
+  `).join('');
+  list.innerHTML = html;
+  mList.innerHTML = html;
+}
+
+// ===== ACTIONS =====
+function addLineItem(type) {
+  const p = getActivePeriod();
+  const nameEl = document.getElementById('add-' + (type === 'ingredients' ? 'ing' : 'ops') + '-name');
+  const amtEl = document.getElementById('add-' + (type === 'ingredients' ? 'ing' : 'ops') + '-amt');
+  const name = nameEl.value.trim();
+  const amount = parseFloat(amtEl.value) || 0;
+  if (!name) return;
+  p[type].push({ id: Date.now().toString(), name, amount });
+  nameEl.value = ''; amtEl.value = '';
+  saveState(); render();
+}
+
+function removeLineItem(type, id) {
+  const p = getActivePeriod();
+  p[type] = p[type].filter(i => i.id !== id);
+  saveState(); render();
+}
+
+function updateItemName(type, id, name) {
+  const p = getActivePeriod();
+  const item = p[type].find(i => i.id === id);
+  if (item) { item.name = name; saveState(); }
+}
+
+function updateItemAmount(type, id, val) {
+  const p = getActivePeriod();
+  const item = p[type].find(i => i.id === id);
+  if (item) { item.amount = parseFloat(val) || 0; saveState(); render(); }
+}
+
+function saveSetup() {
+  const p = getActivePeriod();
+  p.company = document.getElementById('setup-company').value;
+  p.period = document.getElementById('setup-period').value;
+  p.date = document.getElementById('setup-date').value;
+  p.startingMoney = parseFloat(document.getElementById('setup-starting-money').value) || 0;
+  p.inventory = parseFloat(document.getElementById('setup-inventory').value) || 0;
+  p.opex = parseFloat(document.getElementById('setup-opex').value) || 0;
+  p.startingCash = parseFloat(document.getElementById('setup-starting-cash').value) || 0;
+  p.revenue = parseFloat(document.getElementById('setup-revenue').value) || 0;
+  p.ownersCapital = parseFloat(document.getElementById('setup-owners-capital').value) || 0;
+  p.investments = parseFloat(document.getElementById('setup-investments').value) || 0;
+  saveState(); render();
+  showToast('Saved! 💾');
+}
+
+function newPeriod() {
+  const p = defaultPeriod();
+  p.period = 'New Period ' + (state.periods.length + 1);
+  p.ingredients = [];
+  p.operations = [];
+  state.periods.push(p);
+  state.activePeriodId = p.id;
+  saveState(); render();
+  switchTab('setup');
+  showToast('New period created!');
+}
+
+function deletePeriod(id) {
+  if (state.periods.length <= 1) { showToast('Cannot delete last period'); return; }
+  if (!confirm('Delete this period?')) return;
+  state.periods = state.periods.filter(p => p.id !== id);
+  if (state.activePeriodId === id) state.activePeriodId = state.periods[0].id;
+  saveState(); render();
+}
+
+function switchPeriod(id) {
+  state.activePeriodId = id;
+  saveState(); render();
+  closeModal('periodModal');
+  showToast('Period loaded!');
+}
+
+// ===== UI =====
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['income', 'cashflow', 'balance', 'setup'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.getElementById('periodModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('periodModal');
+});
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = `
+    position:fixed; bottom:90px; left:50%; transform:translateX(-50%);
+    background:var(--surface2); border:1px solid var(--accent); color:var(--accent);
+    font-family:'DM Mono',monospace; font-size:0.75rem;
+    padding:8px 18px; border-radius:20px; z-index:999;
+    animation: fadeup 2s ease forwards;
+  `;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fadeup {
+    0%{opacity:0;transform:translateX(-50%) translateY(10px)}
+    20%{opacity:1;transform:translateX(-50%) translateY(0)}
+    80%{opacity:1}
+    100%{opacity:0}
+  }
+`;
+document.head.appendChild(style);
+
+// ===== SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+// ===== INIT =====
+loadState();
+render();
+</script>
+</body>
+</html>
